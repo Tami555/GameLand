@@ -77,7 +77,8 @@ class Cell(QPushButton):
                     self.game.result_label.setStyleSheet('color: red')
                     self.game.play_music(music_game_over)
                     # завершение игры через 4 секунды после проигрыша
-                    QTimer.singleShot(5000, self.game.close)
+                    QTimer.singleShot(5000, self.game.closes)
+                    # self.game.player.stop()
 
                 # не бомба
                 else:
@@ -97,8 +98,7 @@ class Cell(QPushButton):
             self.game.save_result()
             print('New record:', self.game.record)
             self.game.Break_record()
-
-            QTimer.singleShot(5000, self.game.close)
+            QTimer.singleShot(5000, self.game.closes)
 
 
 # Класс самой игры (поля)
@@ -389,6 +389,10 @@ class SapperGame(QMainWindow):
                 print('NOW RECORD', self.current_record, '\n', 'Password', self.now_user)
         except FileNotFoundError:
             print('Проблема с пользовательским файлом!!!!!')
+
+    def closes(self):
+        self.player.stop()
+        self.close()
 
 
 app = QApplication(sys.argv)

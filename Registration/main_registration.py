@@ -4,7 +4,7 @@ from PyQt6 import uic
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QMainWindow, QApplication
 from PyQt6.QtGui import QIcon
-
+from string import digits
 
 class Registration(QMainWindow):
     """Класс для регистрации"""
@@ -90,9 +90,11 @@ class Login(Registration):
         result = self.cur.execute("""
                             SELECT * FROM users
                              WHERE Password = ? AND Name = ?""", (password, name)).fetchone()
+
         if result is None:
             self.answer_message_2.setStyleSheet("color: red;")
             self.answer_message_2.setText('The username or password is incorrect!!!')
+
         else:
             print(f'Есть такой Пользователь, это же {result[0]}')
             QTimer.singleShot(1000, self.close)  # закрываем текущее окно
@@ -134,21 +136,25 @@ class SignUP(Registration):
 
     def connection_database(self, password):
         """ Обращение к БД для создания новой записи о пользователе"""
-
-        result = self.cur.execute("""
-                            SELECT * FROM users WHERE Password = ?""", (password,)).fetchone()
-        if result is None:
-            self.cur.execute("""
-            INSERT INTO users(Name, Password, Email)
-            VALUES(?, ?, ?)""", (self.user_name, self.user_password, self.user_email))
-            self.create_now_user((self.user_name, self.user_password, self.user_email, '0'))
-            QTimer.singleShot(1000, self.close)  # закрываем текущее окно
-            self.parents.close()  # закрываем родителя
+        if any([x not in digits for x in self.user_password]):
+            self.answer_message_2.setStyleSheet("color: red;")
+            self.answer_message_2.setText('The password must consist of numbers only!!!!')
 
         else:
-            self.answer_message_2.setStyleSheet("color: red;")
-            self.answer_message_2.setText('This password is busy, come up with another one')
-        self.database.commit()
+            result = self.cur.execute("""
+                                        SELECT * FROM users WHERE Password = ?""", (password,)).fetchone()
+            if result is None:
+                self.cur.execute("""
+                        INSERT INTO users(Name, Password, Email)
+                        VALUES(?, ?, ?)""", (self.user_name, self.user_password, self.user_email))
+                self.create_now_user((self.user_name, self.user_password, self.user_email, '0'))
+                QTimer.singleShot(1000, self.close)  # закрываем текущее окно
+                self.parents.close()  # закрываем родителя
+
+            else:
+                self.answer_message_2.setStyleSheet("color: red;")
+                self.answer_message_2.setText('This password is busy, come up with another one')
+            self.database.commit()
 
     def closeEvent(self, event):
         # перед закрытием окна очищаем ввод
